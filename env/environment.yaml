@@ -1,0 +1,16 @@
+# =====================================================================
+#                   ctdna-project Conda environment
+#
+# For use in ctDNA pipeline project - minimal environment, most 
+# dependencies of pipeline organised through Docker containers
+#   - nextflow: used to launch pipeline
+#   - graphviz: used to plot DAG flowcharts of nextflow pipelines
+# <https://github.com/erikwaskiewicz/ctdna-project>
+#
+# =====================================================================
+
+name: ctdna-project
+dependencies:
+- python=3.7
+- conda-forge::graphviz=2.40.1
+- bioconda::nextflow=19.07.0
