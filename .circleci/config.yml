@@ -1,0 +1,45 @@
+version: 2
+
+jobs:
+  build:
+    # start clean linux machine in home directory
+    # can't easily use Docker container for testing because we need to use multiple
+    # Docker images - spawning Docker images from within a Docker image is tricky
+    working_directory: ~/ctdna-project
+    machine: true
+
+    steps:
+      - checkout
+      - run:
+          name: Install miniconda
+          command: |
+            wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh \
+            && bash ~/miniconda.sh -b -p $HOME/miniconda \
+            && source "$HOME/miniconda/etc/profile.d/conda.sh" \
+            && conda config --set always_yes yes \
+            && conda update -q conda \
+            && conda install python=3.7 \
+            && conda install -c bioconda nextflow=19.07.0 \
+            && conda install -c conda-forge pytest=5.1.2
+      - run:
+          name: Run pipeline with test data
+          command: |
+            # activate conda environment first
+            source "$HOME/miniconda/etc/profile.d/conda.sh" \
+            && conda activate base \
+            && nextflow run pipeline.nf -profile test
+      - run:
+          name: Run unit tests
+          command: |
+            # activate conda environment first
+            source "$HOME/miniconda/etc/profile.d/conda.sh" \
+            && conda activate base \
+            && mkdir unit_tests \
+            && pytest --verbose --junitxml=unit_tests/junit.xml
+
+      - store_test_results:
+          path: unit_tests
+
+      - store_artifacts:
+          path: data/test_data/output/
+      
