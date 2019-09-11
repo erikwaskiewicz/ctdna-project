@@ -27,7 +27,7 @@ jobs:
             # activate conda environment first
             source "$HOME/miniconda/etc/profile.d/conda.sh" \
             && conda activate base \
-            && nextflow run pipeline.nf -profile test
+            && nextflow run ctdna-snv-caller-comparison.nf -profile test
       - run:
           name: Run unit tests
           command: |
