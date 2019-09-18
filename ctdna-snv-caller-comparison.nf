@@ -44,7 +44,7 @@ println ""
  *  Prepare input data
  *-------------------------------------------------------------------------*/
 
-process bam_add_read_groups {
+process preprocess_bam_rg {
     /* 
      * Adds reads groups to the input BAM file so it is compatable with 
      * downstream tools
@@ -52,43 +52,49 @@ process bam_add_read_groups {
     publishDir "${params.outdir}/processed_bams", mode: "copy"
 
     input:
-    file bam from bam_file
+        file bam from bam_file
 
     output:
-    file "${bam.name.replace('.bam', '_rg.bam')}" into bam_rg
+        file "${bam.name.replace('.bam', '_rg.bam')}" into bam_rg
+        file "${bam.name.replace('.bam', '_rg.bai')}" into bam_rg_index
 
     script:
-    """
-    picard AddOrReplaceReadGroups \
-        I=$bam \
-        O=${bam.name.replace('.bam', '_rg.bam')} \
-        RGID=1 \
-        RGLB=lib1 \
-        RGPL=illumina \
-        RGPU=unit1 \
-        RGSM=$params.sample_name
-    """
+        """
+        picard AddOrReplaceReadGroups \
+            I=$bam \
+            O=${bam.name.replace('.bam', '_rg.bam')} \
+            RGID=RG1 \
+            RGLB=LIBRARY1 \
+            RGPL=ILLUMINA \
+            RGPU=FLOWCELL1.LANE1 \
+            RGSM=$params.sample_name \
+            SORT_ORDER=coordinate \
+            CREATE_INDEX=true
+        """
 }
 
 
-process bam_index {
+process preprocess_bam_rmdup {
     /* 
-     * Creates a BAM index file for use with downstream tools
+     * 
      */
     publishDir "${params.outdir}/processed_bams", mode: "copy"
 
     input:
-    file bam from bam_rg
+        file bam from bam_rg
 
     output:
-    file "${bam}.bai" into bam_index
+        file "${bam.name.replace('.bam', '_rmdup.bam')}" into bam_rmdup
+        file "${bam.name.replace('.bam', '_rmdup.bai')}" into bam_rmdup_index
 
     script:
-    """
-    picard BuildBamIndex \
-        INPUT=$bam \
-        OUTPUT=${bam}.bai
-    """
+        """
+        picard MarkDuplicates \
+            INPUT=$bam \
+            OUTPUT=${bam.name.replace('.bam', '_rmdup.bam')} \
+            METRICS_FILE=metrics.txt \
+            CREATE_INDEX=true
+        """
 }
 
 
@@ -104,47 +110,44 @@ process var_call_mutect {
     publishDir "${params.outdir}/vcfs", mode: "copy"
 
     input:
-    // must input all files so that they can be seen in docker container
-    file ref_file from genome_reference.fasta
-    file ref_index from genome_reference.index
-    file ref_dict from genome_reference.dict
-    file bam from bam_rg
-    file bam_index from bam_index
+        // must input all files so that they can be seen in docker container
+        file ref_file from genome_reference.fasta
+        file ref_index from genome_reference.index
+        file ref_dict from genome_reference.dict
+        file bam from bam_rmdup
+        file bam_index from bam_rmdup_index
 
     output:
-    file "${params.sample_name}_mutect.vcf" into vcf_mutect
+        file "${params.sample_name}_mutect.vcf" into vcf_mutect
 
     script:
-    """
-    gatk Mutect2 \
-        --input $bam \
-        --output ${params.sample_name}_mutect.vcf \
-        --reference $ref_file
-    """
+        """
+        gatk Mutect2 \
+            --input $bam \
+            --output ${params.sample_name}_mutect.vcf \
+            --reference $ref_file
+        """
 }
 
 
-process var_call_other {
+process var_call_sinvict {
     /* 
      * TODO - placeholder for other variant callers
      * add processes to call variants with other variant callers
      */
+    container "erikwaskiewicz/ctdna-sinvict:latest"
     publishDir "${params.outdir}/vcfs", mode: "copy"
 
     input:
-    file ref_file from genome_reference.fasta
-    file ref_index from genome_reference.index
-    file ref_dict from genome_reference.dict
-    file bam from bam_rg
-    file bam_index from bam_index
+        file bam from bam_rmdup
 
     output:
-    file "${params.sample_name}_other.vcf" into vcf_other 
+        file "${params.sample_name}_sinvict.txt" into vcf_sinvict
 
     script:
-    """
-    touch ${params.sample_name}_other.vcf
-    """
+        """
+        bash /home/run_sinvict.sh $bam ${params.sample_name}_sinvict.txt
+        """
 }
 
 
@@ -161,17 +164,17 @@ process combine_vcfs {
     publishDir "${params.outdir}/combined", mode: "copy"
 
     input:
-    file f1 from vcf_mutect
-    file f2 from vcf_other
+        file f1 from vcf_mutect
+        file f2 from vcf_sinvict
 
     output:
-    file "${params.sample_name}_all.txt" into combined_vcfs
+        file "${params.sample_name}_all.txt" into combined_vcfs
 
     script:
-    """
-    echo $f1 >> ${params.sample_name}_all.txt
-    echo $f2 >> ${params.sample_name}_all.txt
-    """
+        """
+        echo $f1 >> ${params.sample_name}_all.txt
+        echo $f2 >> ${params.sample_name}_all.txt
+        """
 }
 
 
