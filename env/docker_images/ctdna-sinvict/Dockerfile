@@ -7,36 +7,28 @@
 #
 # =====================================================================
 
-FROM ubuntu:14.04 
+# Use miniconda parent image - debian based
+FROM continuumio/miniconda3:4.7.10
 MAINTAINER Erik Waskiewicz
+
+# Install awk and ps for use with Nextflow reports, 
+# build essentials and git for installing sinvict
+RUN apt-get update \
+ && apt-get install --yes --no-install-recommends \
+    build-essential \
+    gawk \
+    git \
+    procps \
+# remove apt cache after running to reduce image size
+ && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory & copy across current directory
 WORKDIR /home
 COPY . /home
 
-# Install requirements
-RUN apt-get update && apt-get install --yes --no-install-recommends \
-    build-essential \
-    git \
-    software-properties-common \
-    cmake \
-    libncurses-dev \
-    zlib1g-dev \
-    patch \
-    libbz2-dev \
-    liblzma-dev \
-# remove apt cache after running to reduce image size
- && rm -rf /var/lib/apt/lists/*
-
-# Install sinvict and bam-readcount
-RUN git clone https://github.com/sfu-compbio/sinvict.git \
- && make -C /home/sinvict \
- && git clone https://github.com/samtools/htslib.git \
- && git clone https://github.com/samtools/bcftools.git \
- && make -C /home/bcftools \
- && git clone https://github.com/genome/bam-readcount.git \
- && cd /home/bam-readcount/ \
- && cmake /home/bam-readcount/ \
- && make \
- && export PATH=$PATH:/home/bam-readcount/bin:/home/sinvict
-
+# Update conda, make the conda environment and install sinvict
+RUN conda update -n base -c defaults conda \
+ && conda install -c bioconda bam-readcount=0.8 \
+ && conda install -c bioconda bcftools=1.9 \
+ && git clone https://github.com/sfu-compbio/sinvict.git \
+ && make -C /home/sinvict
