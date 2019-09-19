@@ -139,14 +139,18 @@ process var_call_sinvict {
     publishDir "${params.outdir}/vcfs", mode: "copy"
 
     input:
+        file ref_file from genome_reference.fasta
         file bam from bam_rmdup
 
     output:
-        file "${params.sample_name}_sinvict.txt" into vcf_sinvict
+        file "${params.sample_name}_sinvict.vcf" into vcf_sinvict
 
     script:
         """
-        bash /home/run_sinvict.sh $bam ${params.sample_name}_sinvict.txt
+        python /home/run_sinvict.py \
+            $bam \
+            $ref_file \
+            ${params.sample_name}_sinvict.vcf
         """
 }
 
