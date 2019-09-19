@@ -5,17 +5,18 @@
 
 Docker image for running the SiNVICT variant caller as part of the ctDNA Nextflow pipeline (https://github.com/sfu-compbio/sinvict).
 
-Includes bam-readcount for pre-processing BAMs.
+Based on the Miniconda3 base image (v4.7.10), with these packages installed through conda:
+- bam-readcount v0.8 (requirement for SiNVICT)
+- bcftools v1.9 (to produce VCF output files)
+
+SiNVICT isn't available through Conda and is installed through git and make.
 
 The following requirements are installed through apt-get:
 
-- build-essential
-- git
-- software-properties-common
-- cmake
-- libncurses-dev
-- zlib1g-dev
-- patch
+- build-essential (required to build SiNVICT)
+- git (required to build SiNVICT)
+- gawk (Required for Nextflow reports)
+- procps (Required for Nextflow reports)
 
 GitHub: https://github.com/erikwaskiewicz/ctdna-project/
 
