@@ -18,9 +18,19 @@ class TestFilesExist:
             f'{self.out_path}/processed_bams/{self.sample_name}_rg.bam'
         ) == True
 
-    def test_bam_index(self):
+    def test_bam_rg_index(self):
         assert os.path.exists(
-            f'{self.out_path}/processed_bams/{self.sample_name}_rg.bam.bai'
+            f'{self.out_path}/processed_bams/{self.sample_name}_rg.bai'
+        ) == True
+
+    def test_bam_rmdup(self):
+        assert os.path.exists(
+            f'{self.out_path}/processed_bams/{self.sample_name}_rg_rmdup.bam'
+        ) == True
+
+    def test_bam_rmdup_index(self):
+        assert os.path.exists(
+            f'{self.out_path}/processed_bams/{self.sample_name}_rg_rmdup.bai'
         ) == True
 
     # VCFs from each variant caller
@@ -29,9 +39,9 @@ class TestFilesExist:
             f'{self.out_path}/vcfs/{self.sample_name}_mutect.vcf'
         ) == True
 
-    def test_vcf_other(self):
+    def test_vcf_sinvict(self):
         assert os.path.exists(
-            f'{self.out_path}/vcfs/{self.sample_name}_other.vcf'
+            f'{self.out_path}/vcfs/{self.sample_name}_sinvict.vcf'
         ) == True
 
     def test_combined_vcfs(self):
