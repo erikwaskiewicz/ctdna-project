@@ -12,7 +12,7 @@ FROM continuumio/miniconda3:4.7.10
 MAINTAINER Erik Waskiewicz
 
 # Install awk and ps for use with Nextflow reports, 
-# build essentials and git for installing sinvict
+# Install build essentials and git for SiNVICT
 RUN apt-get update \
  && apt-get install --yes --no-install-recommends \
     build-essential \
@@ -28,7 +28,8 @@ COPY . /home
 
 # Update conda, make the conda environment and install sinvict
 RUN conda update -n base -c defaults conda \
- && conda install -c bioconda bam-readcount=0.8 \
- && conda install -c bioconda bcftools=1.9 \
+ && conda install \
+    bioconda::bam-readcount=0.8 \
+    conda-forge::pandas=0.25.1 \
  && git clone https://github.com/sfu-compbio/sinvict.git \
  && make -C /home/sinvict
