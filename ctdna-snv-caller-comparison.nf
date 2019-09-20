@@ -1,22 +1,18 @@
 """
 ctDNA SNV caller comparison
 
-Pipeline for assessing the ability of different variant callers to call low 
-level SNVs for the use in ctDNA variant detection.
-
-Created:       28 August 2019
-Last updated:  10 September 2019
-Author:        Erik Waskiewicz
+Pipeline for assessing the ability of different variant callers to call
+low level SNVs for the use in ctDNA variant detection.
 
 Usage: nextflow run ctdna_snv_caller.nf
 
 """
-version = "0.0.1"
+version = "0.0.2"
 
 
-/*-------------------------------------------------------------------------*
+/*-------------------------------------------------------------------*
  *  Config
- *-------------------------------------------------------------------------*/
+ *-------------------------------------------------------------------*/
 
 // get file objects for the fasta and bam files
 genome_reference = [
@@ -31,7 +27,7 @@ bam_file = file("${params.indir}/${params.sample_name}.bam")
 println ""
 log.info """
 Nextflow ctDNA SNV caller comparison  -  v$version
-=============================================================================
+=======================================================================
 inputs:
 sample      $params.sample_name
 ref_fasta   $genome_reference.fasta
@@ -40,14 +36,14 @@ bam         $bam_file """
 println ""
 
 
-/*-------------------------------------------------------------------------*
+/*-------------------------------------------------------------------*
  *  Prepare input data
- *-------------------------------------------------------------------------*/
+ *-------------------------------------------------------------------*/
 
 process preprocess_bam_rg {
     /* 
-     * Adds reads groups to the input BAM file so it is compatable with 
-     * downstream tools
+     * Adds reads groups to the input BAM file so it is compatable 
+     * with downstream tools. Also sorts and indexes the BAM file.
      */
     publishDir "${params.outdir}/processed_bams", mode: "copy"
 
@@ -76,7 +72,8 @@ process preprocess_bam_rg {
 
 process preprocess_bam_rmdup {
     /* 
-     * 
+     * Marks and removes any PCR duplicates in the BAM file and creates
+     * an index.
      */
     publishDir "${params.outdir}/processed_bams", mode: "copy"
 
@@ -98,9 +95,9 @@ process preprocess_bam_rmdup {
 }
 
 
-/*-------------------------------------------------------------------------*
+/*-------------------------------------------------------------------*
  *  Variant calling 
- *-------------------------------------------------------------------------*/
+ *-------------------------------------------------------------------*/
 
 process var_call_mutect {
     /* 
@@ -110,7 +107,7 @@ process var_call_mutect {
     publishDir "${params.outdir}/vcfs", mode: "copy"
 
     input:
-        // must input all files so that they can be seen in docker container
+        // must input all files so they can be seen in docker container
         file ref_file from genome_reference.fasta
         file ref_index from genome_reference.index
         file ref_dict from genome_reference.dict
@@ -132,8 +129,11 @@ process var_call_mutect {
 
 process var_call_sinvict {
     /* 
-     * TODO - placeholder for other variant callers
-     * add processes to call variants with other variant callers
+     * Call variants with the SiNVICT variant caller
+     * Runs a custom script within Docker dontainer that:
+     *   - runs bam-readcount to make pileup file
+     *   - runs SiNVICT (outputs 6 text files, one for each filter)
+     *   - converts output into VCF file
      */
     container "erikwaskiewicz/ctdna-sinvict:latest"
     publishDir "${params.outdir}/vcfs", mode: "copy"
@@ -155,9 +155,9 @@ process var_call_sinvict {
 }
 
 
-/*-------------------------------------------------------------------------*
+/*-------------------------------------------------------------------*
  *  Combine results and compare
- *-------------------------------------------------------------------------*/
+ *-------------------------------------------------------------------*/
 
 process combine_vcfs {
     /* 
@@ -182,14 +182,14 @@ process combine_vcfs {
 }
 
 
-/*-------------------------------------------------------------------------*
+/*-------------------------------------------------------------------*
  *  Pipeline completion
- *-------------------------------------------------------------------------*/
+ *-------------------------------------------------------------------*/
 
 workflow.onComplete {
 
     log.info """
-=============================================================================
+=======================================================================
 Completed:  $workflow.complete
 Status:     ${ workflow.success ? 'SUCCESS' : 'FAIL' } """
 
