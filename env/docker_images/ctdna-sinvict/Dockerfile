@@ -31,5 +31,7 @@ RUN conda update -n base -c defaults conda \
  && conda install \
     bioconda::bam-readcount=0.8 \
     conda-forge::pandas=0.25.1 \
+    conda-forge::numpy=1.17.2 \
+    python=3.7 \
  && git clone https://github.com/sfu-compbio/sinvict.git \
  && make -C /home/sinvict
