@@ -155,6 +155,34 @@ process var_call_sinvict {
 }
 
 
+process var_call_varscan {
+    /* 
+     * Call variants with VarScan2
+     */
+    container "erikwaskiewicz/ctdna-varscan:latest"
+    publishDir "${params.outdir}/vcfs", mode: "copy"
+
+    input:
+        file ref_file from genome_reference.fasta
+        file bam from bam_rmdup
+
+    output:
+        file "${params.sample_name}_varscan.vcf" into vcf_varscan
+
+    script:
+        """
+        # make text file with sample name, as required by varscan
+        echo $params.sample_name > sample_list.txt
+        
+        samtools mpileup -B -f $ref_file $bam | \
+        varscan mpileup2snp \
+            --output-vcf 1 \
+            --vcf-sample-list sample_list.txt \
+            > ${params.sample_name}_varscan.vcf
+        """
+}
+
+
 /*-------------------------------------------------------------------*
  *  Combine results and compare
  *-------------------------------------------------------------------*/
@@ -170,6 +198,7 @@ process combine_vcfs {
     input:
         file f1 from vcf_mutect
         file f2 from vcf_sinvict
+        file f3 from vcf_varscan
 
     output:
         file "${params.sample_name}_all.txt" into combined_vcfs
@@ -178,6 +207,7 @@ process combine_vcfs {
         """
         echo $f1 >> ${params.sample_name}_all.txt
         echo $f2 >> ${params.sample_name}_all.txt
+        echo $f3 >> ${params.sample_name}_all.txt
         """
 }
 

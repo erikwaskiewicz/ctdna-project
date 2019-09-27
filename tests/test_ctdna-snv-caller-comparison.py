@@ -44,6 +44,11 @@ class TestFilesExist:
             f'{self.out_path}/vcfs/{self.sample_name}_sinvict.vcf'
         ) == True
 
+    def test_vcf_varscan(self):
+        assert os.path.exists(
+            f'{self.out_path}/vcfs/{self.sample_name}_varscan.vcf'
+        ) == True
+
     def test_combined_vcfs(self):
         assert os.path.exists(
             f'{self.out_path}/combined/{self.sample_name}_all.txt'
