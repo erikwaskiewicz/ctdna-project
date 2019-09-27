@@ -21,7 +21,7 @@ RUN apt-get update \
 
 # Set the working directory & copy across current directory
 WORKDIR /home
-COPY . /home
+COPY env/docker_images/ctdna-base/ /home
 
 # Update conda and make the conda environment
 RUN conda update -n base -c defaults conda \
