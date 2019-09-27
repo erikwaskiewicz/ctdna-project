@@ -14,7 +14,7 @@ LABEL maintainer="Erik Waskiewicz"
 # Set the working directory & copy across current directory
 # Set python so that it doesn't create .pyc files
 WORKDIR /home
-COPY . /home
+COPY env/docker_images/ctdna-varscan /home
 ENV PYTHONDONTWRITEBYTECODE=true
 
 # Install awk and ps for use with Nextflow reports
