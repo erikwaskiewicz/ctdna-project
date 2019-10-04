@@ -4,11 +4,28 @@ ctDNA SNV caller comparison
 Pipeline for assessing the ability of different variant callers to call
 low level SNVs for the use in ctDNA variant detection.
 
-Usage: nextflow run ctdna_snv_caller.nf
+"""
+
+help_message = """
+===============================================================================
+
+ctdna-snv-caller-comparison.nf  -  v${params.version}
+
+===============================================================================
+
+Pipeline for assessing the ability of different variant callers to call
+low level SNVs for the use in ctDNA variant detection.
+
+Usage: nextflow ctdna-snv-caller-comparison.nf [ parameters ]
+
+Required parameters:
+  --bam_file        Absolute path to BAM file
+  --fasta_ref       Absolute path to FASTA file
+
+Output:
+  --outdir          Path where the results to be saved [Default: './data/output']
 
 """
-help_message = """
-TODO - help text goes here"""
 
 /*-------------------------------------------------------------------*
  *  Config
