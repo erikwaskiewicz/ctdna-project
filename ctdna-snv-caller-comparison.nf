@@ -67,11 +67,11 @@ process preprocess_bam_rg {
     publishDir "${params.outdir}/processed_bams", mode: "copy"
 
     input:
-        file bam from bam_file
+        file(bam) from bam_file
 
     output:
-        file "${bam.name.replace('.bam', '_rg.bam')}" into bam_rg
-        file "${bam.name.replace('.bam', '_rg.bai')}" into bam_rg_index
+        file("${bam.name.replace('.bam', '_rg.bam')}") into bam_rg
+        file("${bam.name.replace('.bam', '_rg.bai')}") into bam_rg_index
 
     script:
         """
@@ -97,11 +97,11 @@ process preprocess_bam_rmdup {
     publishDir "${params.outdir}/processed_bams", mode: "copy"
 
     input:
-        file bam from bam_rg
+        file(bam) from bam_rg
 
     output:
-        file "${bam.name.replace('.bam', '_rmdup.bam')}" into bam_rmdup
-        file "${bam.name.replace('.bam', '_rmdup.bai')}" into bam_rmdup_index
+        file("${bam.name.replace('.bam', '_rmdup.bam')}") into bam_rmdup
+        file("${bam.name.replace('.bam', '_rmdup.bai')}") into bam_rmdup_index
 
     script:
         """
@@ -127,14 +127,14 @@ process var_call_mutect {
 
     input:
         // must input all files so they can be seen in docker container
-        file ref_file from genome_fasta_file
-        file ref_index from genome_fasta_index
-        file ref_dict from genome_fasta_dict
-        file bam from bam_rmdup
-        file bam_index from bam_rmdup_index
+        file(ref_file) from genome_fasta_file
+        file(ref_index) from genome_fasta_index
+        file(ref_dict) from genome_fasta_dict
+        file(bam) from bam_rmdup
+        file(bam_index) from bam_rmdup_index
 
     output:
-        file "${params.sample_name}_mutect.vcf" into vcf_mutect
+        file("${params.sample_name}_mutect.vcf") into vcf_mutect
 
     script:
         """
@@ -158,11 +158,11 @@ process var_call_sinvict {
     publishDir "${params.outdir}/vcfs", mode: "copy"
 
     input:
-        file ref_file from genome_fasta_file
-        file bam from bam_rmdup
+        file(ref_file) from genome_fasta_file
+        file(bam) from bam_rmdup
 
     output:
-        file "${params.sample_name}_sinvict.vcf" into vcf_sinvict
+        file("${params.sample_name}_sinvict.vcf") into vcf_sinvict
 
     script:
         """
@@ -182,11 +182,11 @@ process var_call_varscan {
     publishDir "${params.outdir}/vcfs", mode: "copy"
 
     input:
-        file ref_file from genome_fasta_file
-        file bam from bam_rmdup
+        file(ref_file) from genome_fasta_file
+        file(bam) from bam_rmdup
 
     output:
-        file "${params.sample_name}_varscan.vcf" into vcf_varscan
+        file("${params.sample_name}_varscan.vcf") into vcf_varscan
 
     script:
         """
@@ -215,12 +215,12 @@ process combine_vcfs {
     publishDir "${params.outdir}/combined", mode: "copy"
 
     input:
-        file f1 from vcf_mutect
-        file f2 from vcf_sinvict
-        file f3 from vcf_varscan
+        file(f1) from vcf_mutect
+        file(f2) from vcf_sinvict
+        file(f3) from vcf_varscan
 
     output:
-        file "${params.sample_name}_all.txt" into combined_vcfs
+        file("${params.sample_name}_all.txt") into combined_vcfs
 
     script:
         """
