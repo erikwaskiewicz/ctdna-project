@@ -32,16 +32,20 @@ if ( file(params.genome_fasta.replace(".fasta", ".dict")).exists() ) {
 } else { params.genome_fasta_dict = false }
 
 // make file objects
-bam_file          = file("$params.input_bam", checkIfExists: true)
-genome_fasta_file = file("$params.genome_fasta", checkIfExists: true)
-genome_fasta_index = file("$params.genome_fasta_index", checkIfExists: true)
-genome_fasta_dict = file("$params.genome_fasta_dict", checkIfExists: true)
-params.sample_name = bam_file.name.replace(".bam", "")
+bam_file               = file("$params.input_bam", checkIfExists: true)
+genome_fasta_file      = file("$params.genome_fasta", checkIfExists: true)
+genome_fasta_index     = file("$params.genome_fasta_index", checkIfExists: true)
+genome_fasta_dict      = file("$params.genome_fasta_dict", checkIfExists: true)
+params.sample_name     = bam_file.name.replace(".bam", "")
 
 // Create a summary for the logfile
 def summary = [:]
 summary["Version"]     = "$params.version"
+summary["Git info"]    = "$workflow.repository - $workflow.revision [$workflow.commitId]"
+summary["Command"]     = "$workflow.commandLine"
+summary["Start time"]  = "$workflow.start"
 summary["Sample"]      = "$params.sample_name"
+summary["Project"]     = "$workflow.projectDir"
 summary["BAM file"]    = "$params.input_bam"
 summary["fasta file"]  = "$params.genome_fasta"
 summary["fasta index"] = "$params.genome_fasta_index"
@@ -238,8 +242,9 @@ process combine_vcfs {
 workflow.onComplete {
 
     log.info """
-=======================================================================
-Completed:  $workflow.complete
-Status:     ${ workflow.success ? 'SUCCESS' : 'FAIL' } """
+        ===============================================================================
+        Completed:  $workflow.complete
+        Status:     ${ workflow.success ? 'SUCCESS' : 'FAIL' }
+        """.stripIndent()
 
 }
