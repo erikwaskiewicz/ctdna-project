@@ -34,8 +34,6 @@ if ( file(params.genome_fasta.replace(".fasta", ".dict")).exists() ) {
 // make file objects
 bam_file               = file("$params.input_bam", checkIfExists: true)
 genome_fasta_file      = file("$params.genome_fasta", checkIfExists: true)
-genome_fasta_index     = file("$params.genome_fasta_index", checkIfExists: true)
-genome_fasta_dict      = file("$params.genome_fasta_dict", checkIfExists: true)
 params.sample_name     = bam_file.name.replace(".bam", "")
 
 // Create a summary for the logfile
@@ -62,6 +60,50 @@ Inputs:\n${ summary.collect  { k,v -> "  ${k.padRight(12)}: $v" }.join("\n") }
 /*-------------------------------------------------------------------*
  *  Prepare input data
  *-------------------------------------------------------------------*/
+
+// make fasta index if not supplied
+if ( !params.genome_fasta_index ) {
+
+    process make_fasta_index {
+        publishDir "$baseDir/data/test_data/input/", mode: "copy"
+
+        input:
+            file(fasta) from genome_fasta_file
+
+        output:
+            file("${fasta.name + '.fai'}") into genome_fasta_index
+
+        script:
+        """
+        samtools faidx $fasta > ${fasta.name + '.fai'}
+        """
+    }
+
+} else { genome_fasta_index = file("$params.genome_fasta_index") }
+
+
+// make fasta dict if not supplied
+if ( !params.genome_fasta_dict ) {
+
+    process make_fasta_dict {
+        publishDir "$baseDir/data/test_data/input/", mode: "copy"
+
+        input:
+            file(fasta) from genome_fasta_file
+
+        output:
+            file("${fasta.name.replace(".fasta", ".dict")}") into genome_fasta_dict
+
+        script:
+        """
+        picard CreateSequenceDictionary \
+            R=$fasta \
+            O=${fasta.name.replace(".fasta", ".dict")}
+        """
+    }
+
+} else { genome_fasta_dict = file("$params.genome_fasta_dict") }
+
 
 process preprocess_bam_rg {
     /* 
