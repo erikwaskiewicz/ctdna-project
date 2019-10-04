@@ -24,7 +24,7 @@ RUN apt-get update \
 
 # Set the working directory & copy across current directory
 WORKDIR /home
-COPY env/docker_images/ctdna-sinvict /home
+COPY . /home
 
 # Update conda, make the conda environment and install sinvict
 RUN conda update -n base -c defaults conda \
