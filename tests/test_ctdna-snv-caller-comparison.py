@@ -9,8 +9,20 @@ class TestFilesExist:
     made, but an extra check can't hurt.
     """
 
+    in_path = 'data/test_data/input'
     out_path = 'data/test_data/output'
     sample_name = 'test_data'
+
+    # FASTA index and dict
+    def test_fasta_index(self):
+        assert os.path.exists(
+            f'data/test_data/input/human_chr22_hg19.fasta.fai'
+        ) == True
+
+    def test_fasta_dict(self):
+        assert os.path.exists(
+            f'data/test_data/input/human_chr22_hg19.dict'
+        ) == True
 
     # processed BAM files
     def test_bam_rg(self):
@@ -49,6 +61,7 @@ class TestFilesExist:
             f'{self.out_path}/vcfs/{self.sample_name}_varscan.vcf'
         ) == True
 
+    # Combined variant calls
     def test_combined_vcfs(self):
         assert os.path.exists(
             f'{self.out_path}/combined/{self.sample_name}_all.txt'

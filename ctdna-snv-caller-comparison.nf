@@ -64,7 +64,7 @@ Inputs:\n${ summary.collect  { k,v -> "  ${k.padRight(12)}: $v" }.join("\n") }
 // make fasta index if not supplied
 if ( !params.genome_fasta_index ) {
 
-    process make_fasta_index {
+    process preprocess_fasta_index {
         publishDir "$baseDir/data/test_data/input/", mode: "copy"
 
         input:
@@ -85,7 +85,7 @@ if ( !params.genome_fasta_index ) {
 // make fasta dict if not supplied
 if ( !params.genome_fasta_dict ) {
 
-    process make_fasta_dict {
+    process preprocess_fasta_dict {
         publishDir "$baseDir/data/test_data/input/", mode: "copy"
 
         input:
