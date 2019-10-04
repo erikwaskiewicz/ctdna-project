@@ -212,3 +212,4 @@ work/
 ### Project specific ###
 data/real_data/
 data/test_data/output/
+data/pipeline_info/

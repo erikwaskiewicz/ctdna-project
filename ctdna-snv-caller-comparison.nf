@@ -7,33 +7,52 @@ low level SNVs for the use in ctDNA variant detection.
 Usage: nextflow run ctdna_snv_caller.nf
 
 """
-version = "0.0.2"
-
+help_message = """
+TODO - help text goes here"""
 
 /*-------------------------------------------------------------------*
  *  Config
  *-------------------------------------------------------------------*/
 
-// get file objects for the fasta and bam files
-genome_reference = [
-    "fasta": file(params.ref_fasta), 
-    "index": file(params.ref_fasta + ".fai"), 
-    "dict":  file(params.ref_fasta.replace(".fasta", ".dict"))
-]
-bam_file = file("${params.indir}/${params.sample_name}.bam")
+// show help text if help flag used
+params.help = false
+if ( params.help ) { log.info help_message; exit 0 }
 
+// check for input files
+if ( !params.input_bam )    { log.error "ERROR\tinput bam is required"; exit 1 }
+if ( !params.genome_fasta ) { log.error "ERROR\tgenome fasta is required"; exit 1 }
+
+// check if fasta indexes and dict exists
+if ( file(params.genome_fasta + ".fai").exists() ) {
+    params.genome_fasta_index = params.genome_fasta + ".fai"
+} else { params.genome_fasta_index = false }
+
+if ( file(params.genome_fasta.replace(".fasta", ".dict")).exists() ) {
+    params.genome_fasta_dict = params.genome_fasta.replace(".fasta", ".dict")
+} else { params.genome_fasta_dict = false }
+
+// make file objects
+bam_file          = file("$params.input_bam", checkIfExists: true)
+genome_fasta_file = file("$params.genome_fasta", checkIfExists: true)
+genome_fasta_index = file("$params.genome_fasta_index", checkIfExists: true)
+genome_fasta_dict = file("$params.genome_fasta_dict", checkIfExists: true)
+params.sample_name = bam_file.name.replace(".bam", "")
+
+// Create a summary for the logfile
+def summary = [:]
+summary["Version"]     = "$params.version"
+summary["Sample"]      = "$params.sample_name"
+summary["BAM file"]    = "$params.input_bam"
+summary["fasta file"]  = "$params.genome_fasta"
+summary["fasta index"] = "$params.genome_fasta_index"
+summary["fasta dict"]  = "$params.genome_fasta_dict"
 
 // print info to log and/or console
-println ""
 log.info """
-Nextflow ctDNA SNV caller comparison  -  v$version
-=======================================================================
-inputs:
-sample      $params.sample_name
-ref_fasta   $genome_reference.fasta
-bam         $bam_file """
-
-println ""
+===============================================================================
+Inputs:\n${ summary.collect  { k,v -> "  ${k.padRight(12)}: $v" }.join("\n") }
+===============================================================================
+"""
 
 
 /*-------------------------------------------------------------------*
@@ -108,9 +127,9 @@ process var_call_mutect {
 
     input:
         // must input all files so they can be seen in docker container
-        file ref_file from genome_reference.fasta
-        file ref_index from genome_reference.index
-        file ref_dict from genome_reference.dict
+        file ref_file from genome_fasta_file
+        file ref_index from genome_fasta_index
+        file ref_dict from genome_fasta_dict
         file bam from bam_rmdup
         file bam_index from bam_rmdup_index
 
@@ -139,7 +158,7 @@ process var_call_sinvict {
     publishDir "${params.outdir}/vcfs", mode: "copy"
 
     input:
-        file ref_file from genome_reference.fasta
+        file ref_file from genome_fasta_file
         file bam from bam_rmdup
 
     output:
@@ -163,7 +182,7 @@ process var_call_varscan {
     publishDir "${params.outdir}/vcfs", mode: "copy"
 
     input:
-        file ref_file from genome_reference.fasta
+        file ref_file from genome_fasta_file
         file bam from bam_rmdup
 
     output:
