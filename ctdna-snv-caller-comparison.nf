@@ -185,7 +185,6 @@ process var_call_mutect {
     /* 
      * Call variants with GATK mutect2
      */
-    container "broadinstitute/gatk:4.1.3.0"
     publishDir "${params.outdir}/vcfs", mode: "copy"
 
     input:
@@ -205,6 +204,33 @@ process var_call_mutect {
             --input $bam \
             --output ${params.sample_name}_mutect.vcf \
             --reference $ref_file
+        """
+}
+
+
+process process_mutect {
+    /* 
+     * Convert Mutect VCF into table
+     */
+    input:
+        file(vcf) from vcf_mutect
+
+    output:
+        file("${params.sample_name}_mutect.txt") into processed_mutect
+
+    script:
+        """
+        # convert to table
+        gatk VariantsToTable \
+            -V $vcf \
+            -O variants.txt \
+            -F CHROM -F POS -F REF -F ALT -F FILTER \
+            -GF AF -GF AD -GF DP
+        
+        # merge chr,pos,ref and alt, change headers and save to file
+        awk ' { print \$1":"\$2\$3">"\$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8 } ' variants.txt | \
+        sed "1 s/^.*\$/variant\tmutect_filter\tmutect_AF\tmutect_AD\tmutect_DP/" \
+            > ${params.sample_name}_mutect.txt
         """
 }
 
@@ -237,6 +263,33 @@ process var_call_sinvict {
 }
 
 
+process process_sinvict {
+    /* 
+     * Convert SiNVICT VCF into table
+     */
+    input:
+        file(vcf) from vcf_sinvict
+
+    output:
+        file("${params.sample_name}_sinvict.txt") into processed_sinvict
+
+    script:
+        """
+        # convert to table
+        gatk VariantsToTable \
+            -V $vcf \
+            -O variants.txt \
+            -F CHROM -F POS -F REF -F ALT -F FILTER \
+            -GF SVVAF -GF SVR -GF DP
+        
+        # merge chr,pos,ref and alt, change headers and save to file
+        awk ' { print \$1":"\$2\$3">"\$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8 } ' variants.txt | \
+        sed "1 s/^.*\$/variant\tsinvict_filter\tsinvict_AF\tsinvict_AD\tsinvict_DP/" \
+            > ${params.sample_name}_sinvict.txt
+        """
+}
+
+
 process var_call_varscan {
     /* 
      * Call variants with VarScan2
@@ -265,31 +318,68 @@ process var_call_varscan {
 }
 
 
+process process_varscan {
+    /* 
+     * Convert VarScan VCF into table
+     */
+    input:
+        file(vcf) from vcf_varscan
+
+    output:
+        file("${params.sample_name}_varscan.txt") into processed_varscan
+
+    script:
+        """
+        # convert to table
+        gatk VariantsToTable \
+            -V $vcf \
+            -O variants.txt \
+            -F CHROM -F POS -F REF -F ALT -F FILTER \
+            -GF FREQ -GF AD -GF DP
+        
+        # merge chr,pos,ref and alt, change headers and save to file
+        awk ' { print \$1":"\$2\$3">"\$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8 } ' variants.txt | \
+        sed "1 s/^.*\$/variant\tvarscan_filter\tvarscan_AF\tvarscan_AD\tvarscan_DP/" \
+            > ${params.sample_name}_varscan.txt
+        """
+}
+
+
 /*-------------------------------------------------------------------*
  *  Combine results and compare
  *-------------------------------------------------------------------*/
 
 process combine_vcfs {
     /* 
-     * TODO
-     * once all variant calling steps have been run, merge vcfs here 
-     * and compare variant calls
+     * Once all variant calling steps have been run, merge variant 
+     * calls into single dataframe and save as CSV
      */
     publishDir "${params.outdir}/combined", mode: "copy"
 
     input:
-        file(f1) from vcf_mutect
-        file(f2) from vcf_sinvict
-        file(f3) from vcf_varscan
+        file(mutect_variants) from processed_mutect
+        file(sinvict_variants) from processed_sinvict
+        file(varscan_variants) from processed_varscan
 
     output:
-        file("${params.sample_name}_all.txt") into combined_vcfs
+        file("${params.sample_name}_combined_results.txt") into combined_vcfs
 
     script:
         """
-        echo $f1 >> ${params.sample_name}_all.txt
-        echo $f2 >> ${params.sample_name}_all.txt
-        echo $f3 >> ${params.sample_name}_all.txt
+        #!/usr/bin/env python
+        import pandas as pd
+
+        # load all files into dataframes with variant ID as index
+        df1 = pd.read_table("$mutect_variants", index_col=0)
+        df2 = pd.read_table("$sinvict_variants", index_col=0)
+        df3 = pd.read_table("$varscan_variants", index_col=0)
+
+        # combine dataframes based on index
+        main = pd.concat([df1, df2, df3], axis=1)
+
+        # write to file
+        with open("${params.sample_name}_combined_results.txt", 'w') as f:
+            main.to_csv(f)
         """
 }
 

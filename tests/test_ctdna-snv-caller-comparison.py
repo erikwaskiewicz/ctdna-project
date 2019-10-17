@@ -64,7 +64,7 @@ class TestFilesExist:
     # Combined variant calls
     def test_combined_vcfs(self):
         assert os.path.exists(
-            f'{self.out_path}/combined/{self.sample_name}_all.txt'
+            f'{self.out_path}/combined/{self.sample_name}_combined_results.txt'
         ) == True
 
 
