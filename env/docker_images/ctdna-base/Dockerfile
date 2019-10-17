@@ -9,21 +9,31 @@
 
 # Use miniconda parent image - debian based
 FROM continuumio/miniconda3:4.7.10
-MAINTAINER Erik Waskiewicz
-
-# Install awk and ps for use with Nextflow reports
-RUN apt-get update \
- && apt-get install --yes --no-install-recommends \
-    gawk \
-    procps \
-# remove apt cache after running to reduce image size
- && rm -rf /var/lib/apt/lists/*
+LABEL maintainer="Erik Waskiewicz"
 
 # Set the working directory & copy across current directory
 WORKDIR /home
 COPY . /home
+ENV PYTHONDONTWRITEBYTECODE=true
 
-# Update conda and make the conda environment
-RUN conda update -n base -c defaults conda \
- && conda install -c bioconda samtools=1.9 \
- && conda install -c bioconda picard=2.20.6
+# Install awk and ps for use with Nextflow reports
+RUN apt-get update \
+ && apt-get install --yes --no-install-recommends \
+        gawk \
+        procps \
+# Remove apt cache after running to reduce image size
+ && rm -rf /var/lib/apt/lists/*
+
+# Make the conda environment
+RUN conda install --yes --freeze-installed \
+        python=3.7 \
+        bioconda::gatk4=4.1.4.0 \
+        bioconda::picard=2.20.6 \
+        bioconda::samtools=1.9 \
+        conda-forge::pandas=0.25.1 \
+        conda-forge::numpy=1.17.2 \
+# Clean up the conda env
+ && conda clean -afy \
+ && find /opt/conda/ -follow -type f -name '*.a' -delete \
+ && find /opt/conda/ -follow -type f -name '*.pyc' -delete \
+ && find /opt/conda/ -follow -type f -name '*.js.map' -delete
