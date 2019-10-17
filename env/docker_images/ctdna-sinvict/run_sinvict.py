@@ -110,7 +110,7 @@ all_calls['POS'] = all_calls['position'].map(str)
 
 all_calls['MPS'] = all_calls['mapped_plus'].str.strip('+:')
 all_calls['MMS'] = all_calls['mapped_minus'].str.strip('-:')
-all_calls['SVVAF'] = all_calls['percent'].div(10).round(3)
+all_calls['SVVAF'] = all_calls['percent'].div(100).round(3)
 
 all_calls['ID'] = '.'
 all_calls['QUAL'] = '.'
