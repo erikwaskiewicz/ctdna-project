@@ -19,10 +19,10 @@ before_script:
   - conda activate base
 
 
-jobs:
-  include:
-    - stage: Run pipeline and unit tests
-      # run Nextflow pipeline with test data set
-      script: nextflow run ctdna-snv-caller-comparison.nf -profile test
-      # Run pytest script on pipeline output
-      script: pytest --verbose --junitxml=unit_tests/junit.xml
+script:
+  # run the nextflow pipeline with the test data
+  - nextflow run ctdna-snv-caller-comparison.nf -profile test
+
+  # run the pytest unit tests on the pipeline output
+  - pytest --verbose
+  
