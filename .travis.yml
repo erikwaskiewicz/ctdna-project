@@ -1,8 +1,6 @@
+# git repo is cloned automatically
 # base image is a minimal linux environment
 language: minimal
-
-# git repo is cloned automatically
-
 
 install:
   # install miniconda and install packages into base environment
@@ -14,15 +12,14 @@ install:
     conda update -q conda
     conda install python=3.7 bioconda::nextflow=19.07.0 conda-forge::pytest=5.1.2
 
-
 before_script:
   # activate the conda environment  before each script
   - conda activate base
 
+jobs:
+  include:
+    - stage: Run Nextflow pipeline with the test data
+      script: nextflow run ctdna-snv-caller-comparison.nf -profile test
 
-script:
-  # run the nextflow pipeline with the test data
-  - nextflow run ctdna-snv-caller-comparison.nf -profile test
-
-  # run the pytest unit tests on the pipeline output
-  - pytest --verbose --junitxml=unit_tests/junit.xml
+    - stage: Run unit tests on the pipeline output
+      script: pytest --verbose --junitxml=unit_tests/junit.xml
