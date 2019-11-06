@@ -22,9 +22,7 @@ before_script:
 jobs:
   include:
     - stage: Run pipeline and unit tests
-    
       # run Nextflow pipeline with test data set
       script: nextflow run ctdna-snv-caller-comparison.nf -profile test
-      
       # Run pytest script on pipeline output
       script: pytest --verbose --junitxml=unit_tests/junit.xml
