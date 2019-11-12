@@ -243,7 +243,7 @@ process var_call_sinvict {
      *   - runs SiNVICT (outputs 6 text files, one for each filter)
      *   - converts output into VCF file
      */
-    container "erikwaskiewicz/ctdna-sinvict:latest"
+    container "${params.singularity_dir}/ctdna-sinvict-latest.simg"
     publishDir "${params.outdir}/vcfs", mode: "copy"
 
     input:
@@ -294,7 +294,7 @@ process var_call_varscan {
     /* 
      * Call variants with VarScan2
      */
-    container "erikwaskiewicz/ctdna-varscan:latest"
+    container "${params.singularity_dir}/ctdna-varscan-latest.simg"
     publishDir "${params.outdir}/vcfs", mode: "copy"
 
     input:
