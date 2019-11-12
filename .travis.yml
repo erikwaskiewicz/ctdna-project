@@ -27,8 +27,7 @@ script:
     singularity pull --name ctdna-varscan-latest.simg docker://erikwaskiewicz/ctdna-varscan:latest
     
   # run the nextflow pipeline with the test data
-  - nextflow run ctdna-snv-caller-comparison.nf -profile test
+  - nextflow run ctdna-snv-caller-comparison.nf -profile test,travis
 
   # run the pytest unit tests on the pipeline output
   - pytest --verbose
-  
