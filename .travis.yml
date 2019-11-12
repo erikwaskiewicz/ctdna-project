@@ -20,6 +20,12 @@ before_script:
 
 
 script:
+  # pull the Sigularity images
+  - SINGULARITY_CACHEDIR=~/singularity_images
+    singularity pull --name ctdna-base-latest.simg docker://erikwaskiewicz/ctdna-base:latest
+    singularity pull --name ctdna-sinvict-latest.simg docker://erikwaskiewicz/ctdna-sinvict:latest
+    singularity pull --name ctdna-varscan-latest.simg docker://erikwaskiewicz/ctdna-varscan:latest
+    
   # run the nextflow pipeline with the test data
   - nextflow run ctdna-snv-caller-comparison.nf -profile test
 
