@@ -6,6 +6,7 @@ language: minimal
 install:
   # install miniconda and install packages into base environment
   - |
+    pwd
     wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
     bash ~/miniconda.sh -b -p $HOME/miniconda
     source "$HOME/miniconda/etc/profile.d/conda.sh"
@@ -22,6 +23,7 @@ before_script:
 script:
   # pull the Sigularity images
   - |
+    pwd
     singularity pull --name ctdna-base-latest.simg docker://erikwaskiewicz/ctdna-base:latest
     singularity pull --name ctdna-sinvict-latest.simg docker://erikwaskiewicz/ctdna-sinvict:latest
     singularity pull --name ctdna-varscan-latest.simg docker://erikwaskiewicz/ctdna-varscan:latest
