@@ -12,7 +12,7 @@ install:
     conda config --set always_yes yes
     conda update -q conda
     conda install python=3.7 bioconda::nextflow=19.07.0 conda-forge::pytest=5.1.2 bioconda::singularity
-    mkdir ~/singularity_images && cd singularity_images
+    mkdir ~/singularity_images && cd ~/singularity_images
     singularity pull --name ctdna-base-latest.simg docker://erikwaskiewicz/ctdna-base:latest
     singularity pull --name ctdna-sinvict-latest.simg docker://erikwaskiewicz/ctdna-sinvict:latest
     singularity pull --name ctdna-varscan-latest.simg docker://erikwaskiewicz/ctdna-varscan:latest
