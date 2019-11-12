@@ -234,7 +234,7 @@ process process_mutect {
         """
 }
 
-
+/*
 process var_call_sinvict {
     /* 
      * Call variants with the SiNVICT variant caller
@@ -242,7 +242,7 @@ process var_call_sinvict {
      *   - runs bam-readcount to make pileup file
      *   - runs SiNVICT (outputs 6 text files, one for each filter)
      *   - converts output into VCF file
-     */
+     *
     container "${params.singularity_dir}/ctdna-sinvict-latest.simg"
     publishDir "${params.outdir}/vcfs", mode: "copy"
 
@@ -266,7 +266,7 @@ process var_call_sinvict {
 process process_sinvict {
     /* 
      * Convert SiNVICT VCF into table
-     */
+     *
     input:
         file(vcf) from vcf_sinvict
 
@@ -288,7 +288,7 @@ process process_sinvict {
             > ${params.sample_name}_sinvict.txt
         """
 }
-
+*/
 
 process var_call_varscan {
     /* 
@@ -358,7 +358,7 @@ process combine_vcfs {
 
     input:
         file(mutect_variants) from processed_mutect
-        file(sinvict_variants) from processed_sinvict
+        //file(sinvict_variants) from processed_sinvict
         file(varscan_variants) from processed_varscan
 
     output:
@@ -371,11 +371,11 @@ process combine_vcfs {
 
         # load all files into dataframes with variant ID as index
         df1 = pd.read_table("$mutect_variants", index_col=0)
-        df2 = pd.read_table("$sinvict_variants", index_col=0)
+
         df3 = pd.read_table("$varscan_variants", index_col=0)
 
         # combine dataframes based on index
-        main = pd.concat([df1, df2, df3], axis=1)
+        main = pd.concat([df1, df3], axis=1)
 
         # write to file
         with open("${params.sample_name}_combined_results.txt", 'w') as f:
