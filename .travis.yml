@@ -6,13 +6,19 @@ language: minimal
 install:
   # install miniconda and install packages into base environment
   - |
-    pwd
+    wget https://github.com/sylabs/singularity/releases/download/v2.6.1/singularity-2.6.1.tar.gz && \
+    tar -xzf singularity-2.6.1.tar.gz && \
+    cd singularity && \
+    ./mconfig && \
+    make -C builddir && \
+    sudo make -C builddir install
+  - |
     wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
     bash ~/miniconda.sh -b -p $HOME/miniconda
     source "$HOME/miniconda/etc/profile.d/conda.sh"
     conda config --set always_yes yes
     conda update -q conda
-    conda install python=3.7 bioconda::nextflow=19.07.0 conda-forge::pytest=5.1.2 bioconda::singularity
+    conda install python=3.7 bioconda::nextflow=19.07.0 conda-forge::pytest=5.1.2
 
 
 before_script:
@@ -23,7 +29,6 @@ before_script:
 script:
   # pull the Sigularity images
   - |
-    pwd
     singularity pull --name ctdna-base-latest.simg docker://erikwaskiewicz/ctdna-base:latest
     singularity pull --name ctdna-sinvict-latest.simg docker://erikwaskiewicz/ctdna-sinvict:latest
     singularity pull --name ctdna-varscan-latest.simg docker://erikwaskiewicz/ctdna-varscan:latest
