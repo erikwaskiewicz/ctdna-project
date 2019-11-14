@@ -6,8 +6,8 @@ language: minimal
 install:
   # install miniconda and install packages into base environment
   - |
-    wget https://github.com/sylabs/singularity/releases/download/v2.6.1/singularity-2.6.1.tar.gz && \
-    tar -xzf singularity-2.6.1.tar.gz && \
+    wget https://github.com/sylabs/singularity/releases/download/v3.3.0/singularity-3.3.0.tar.gz && \
+    tar -xzf singularity-3.3.0.tar.gz && \
     cd singularity && \
     ./mconfig && \
     make -C builddir && \
