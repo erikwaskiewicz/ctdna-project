@@ -6,11 +6,12 @@ language: minimal
 install:
   # install miniconda and install packages into base environment
   - |
-    wget https://github.com/sylabs/singularity/releases/download/v3.3.0/singularity-3.3.0.tar.gz && \
-    tar -xzf singularity-3.3.0.tar.gz && \
-    cd singularity && \
-    ./mconfig && \
-    make -C builddir && \
+    cd ~
+    wget https://github.com/sylabs/singularity/releases/download/v3.3.0/singularity-3.3.0.tar.gz
+    tar -xzf singularity-3.3.0.tar.gz
+    cd singularity
+    ./mconfig
+    make -C builddir
     sudo make -C builddir install
   - |
     wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
@@ -23,7 +24,7 @@ install:
 
 before_script:
   # activate the conda environment  before each script
-  - conda activate base
+  - conda activate base && cd /home/travis/build/erikwaskiewicz/ctdna-project
 
 
 script:
