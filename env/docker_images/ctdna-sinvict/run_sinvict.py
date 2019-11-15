@@ -13,8 +13,11 @@ output_file = sys.argv[3]
 # parse sample name from output file
 sample_name = '_'.join(output_file.split('_')[:-1])
 
+# change into Nextflow work directory
+subprocess.call('cd $NXF_WORK', shell=True)
+
 # make directory to save bam-readcount output, sinvict requires that it is only file in folder
-subprocess.call('mkdir /home/analysis_in', shell=True)
+subprocess.call('mkdir analysis_in', shell=True)
 
 # run bam-readcount, suppress warnings to 1 (otherwise will be one per read)
 # if fasta ref is not included, sinvict will call lots of Ns
@@ -26,14 +29,14 @@ subprocess.call(
         --min-base-quality 20 \
         --max-warnings 1 \
         {input_bam} \
-        > /home/analysis_in/{sample_name}.txt
+        > analysis_in/{sample_name}.txt
     ''',
     shell=True
 )
 
 # run sinvict
 subprocess.call(
-    '/home/sinvict/sinvict -t /home/analysis_in -o /home',
+    '/var/app/sinvict/sinvict -t analysis_in -o .',
     shell=True
 )
 
@@ -66,7 +69,7 @@ all_calls = pd.DataFrame(columns=sinvict_out_cols.append('SVF'))
 # loop through each output file and add a column for filter type
 for filepath, filter_tag in filter_list:
     df = pd.read_csv(
-        f'/home/{filepath}', 
+        filepath, 
         header=None,
         index_col=False,
         sep='\t', 
