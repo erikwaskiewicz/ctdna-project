@@ -12,8 +12,8 @@ FROM continuumio/miniconda3:4.7.10
 LABEL maintainer="Erik Waskiewicz"
 
 # Set the working directory & copy across current directory
-WORKDIR /home
-COPY . /home
+WORKDIR /var/app
+COPY . /var/app
 ENV PYTHONDONTWRITEBYTECODE=true
 
 # Install awk and ps for use with Nextflow reports

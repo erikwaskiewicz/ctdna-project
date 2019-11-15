@@ -12,8 +12,8 @@ FROM continuumio/miniconda3:4.7.10
 LABEL maintainer="Erik Waskiewicz"
 
 # Set the working directory & copy across current directory
-WORKDIR /home
-COPY . /home
+WORKDIR /var/app
+COPY . /var/app
 ENV PYTHONDONTWRITEBYTECODE=true
 
 # Install awk and ps for use with Nextflow reports, 
@@ -40,4 +40,4 @@ RUN conda install --yes --freeze-installed \
  && find /opt/conda/ -follow -type f -name '*.js.map' -delete \
 # Install SiNVICT
  && git clone https://github.com/sfu-compbio/sinvict.git \
- && make -C /home/sinvict
+ && make -C /var/app/sinvict

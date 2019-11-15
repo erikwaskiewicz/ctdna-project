@@ -6,6 +6,14 @@ language: minimal
 install:
   # install miniconda and install packages into base environment
   - |
+    cd ~
+    wget https://github.com/sylabs/singularity/releases/download/v3.3.0/singularity-3.3.0.tar.gz
+    tar -xzf singularity-3.3.0.tar.gz
+    cd singularity
+    ./mconfig
+    make -C builddir
+    sudo make -C builddir install
+  - |
     wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
     bash ~/miniconda.sh -b -p $HOME/miniconda
     source "$HOME/miniconda/etc/profile.d/conda.sh"
@@ -16,13 +24,18 @@ install:
 
 before_script:
   # activate the conda environment  before each script
-  - conda activate base
+  - conda activate base && cd /home/travis/build/erikwaskiewicz/ctdna-project
 
 
 script:
+  # pull the Sigularity images
+  - |
+    singularity pull --name ctdna-base-latest.simg docker://erikwaskiewicz/ctdna-base:latest
+    singularity pull --name ctdna-sinvict-latest.simg docker://erikwaskiewicz/ctdna-sinvict:latest
+    singularity pull --name ctdna-varscan-latest.simg docker://erikwaskiewicz/ctdna-varscan:latest
+    
   # run the nextflow pipeline with the test data
-  - nextflow run ctdna-snv-caller-comparison.nf -profile test
+  - nextflow run ctdna-snv-caller-comparison.nf -profile test,travis
 
   # run the pytest unit tests on the pipeline output
   - pytest --verbose
-  
