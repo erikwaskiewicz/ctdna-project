@@ -51,10 +51,10 @@ class TestFilesExist:
             f'{self.out_path}/vcfs/{self.sample_name}_mutect.vcf'
         ) == True
 
-    #def test_vcf_sinvict(self):
-    #    assert os.path.exists(
-    #        f'{self.out_path}/vcfs/{self.sample_name}_sinvict.vcf'
-    #    ) == True
+    def test_vcf_sinvict(self):
+        assert os.path.exists(
+            f'{self.out_path}/vcfs/{self.sample_name}_sinvict.vcf'
+        ) == True
 
     def test_vcf_varscan(self):
         assert os.path.exists(
