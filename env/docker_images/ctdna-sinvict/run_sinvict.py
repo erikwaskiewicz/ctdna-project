@@ -9,6 +9,7 @@ import pandas as pd
 input_bam = sys.argv[1]
 ref_fasta = sys.argv[2]
 output_file = sys.argv[3]
+roi_bed = sys.argv[4]
 
 # parse sample name from output file
 sample_name = '_'.join(output_file.split('_')[:-1])
@@ -25,6 +26,7 @@ subprocess.call(
     f'''
     bam-readcount \
         --reference-fasta {ref_fasta} \
+        --site-list {roi_bed} \
         --min-mapping-quality 20 \
         --min-base-quality 20 \
         --max-warnings 1 \
