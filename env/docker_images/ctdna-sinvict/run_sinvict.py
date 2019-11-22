@@ -61,7 +61,7 @@ filter_list = (
 # label columns of sinvict output, 
 # capitals are ready to go into final vcf, lower case need processing first
 sinvict_out_cols = [
-    'chr', 'position', 'sample', 'REF', 'DP', 'ALT', 'SVR', 'percent', 
+    'chr', 'position', 'sample', 'REF', 'DP', 'alt', 'SVR', 'percent', 
     'mapped_plus', 'mapped_minus', 'ARP', 'SVT'
 ]
 
@@ -108,10 +108,12 @@ with open(output_file, 'w') as f:
     f.writelines(line + '\n' for line in vcf_header)
 
 # process sinvict data before importing into VCF
-all_calls = all_calls.sort_values(by='position')
+all_calls = all_calls.sort_values(['chr', 'position'])
 
 all_calls['#CHROM'] = all_calls['chr'].map(str)
 all_calls['POS'] = all_calls['position'].map(str)
+# TODO - this just scripts the illegal characters - need to make sure genotypes are correct
+all_calls['ALT'] = all_calls['alt'].str.strip('+-')
 
 all_calls['MPS'] = all_calls['mapped_plus'].str.strip('+:')
 all_calls['MMS'] = all_calls['mapped_minus'].str.strip('-:')
