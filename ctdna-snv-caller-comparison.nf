@@ -197,6 +197,7 @@ process var_call_mutect {
         file(ref_dict) from genome_fasta_dict
         file(bam) from bam_rmdup
         file(bam_index) from bam_rmdup_index
+        file(bed_file) from roi_bed_file
 
     output:
         file("${params.sample_name}_mutect.vcf") into vcf_mutect
@@ -206,7 +207,8 @@ process var_call_mutect {
         gatk Mutect2 \
             --input $bam \
             --output ${params.sample_name}_mutect.vcf \
-            --reference $ref_file
+            --reference $ref_file \
+            --intervals $bed_file
         """
 }
 
@@ -305,6 +307,7 @@ process var_call_varscan {
     input:
         file(ref_file) from genome_fasta_file
         file(bam) from bam_rmdup
+        file(bed_file) from roi_bed_file
 
     output:
         file("${params.sample_name}_varscan.vcf") into vcf_varscan
@@ -314,7 +317,11 @@ process var_call_varscan {
         # make text file with sample name, as required by varscan
         echo $params.sample_name > sample_list.txt
         
-        samtools mpileup -B -f $ref_file $bam | \
+        samtools mpileup \
+            --fasta-ref $ref_file \
+            --no-BAQ \
+            --positions $bed_file \
+            $bam | \
         varscan mpileup2snp \
             --output-vcf 1 \
             --vcf-sample-list sample_list.txt \
