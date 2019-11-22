@@ -254,6 +254,7 @@ process var_call_sinvict {
     input:
         file(ref_file) from genome_fasta_file
         file(bam) from bam_rmdup
+        file(bam_index) from bam_rmdup_index
         file(bed_file) from roi_bed_file
 
     output:
@@ -261,7 +262,7 @@ process var_call_sinvict {
 
     script:
         """
-        python /var/app/run_sinvict.py \
+        python ${workflow.projectDir}/env/docker_images/ctdna-sinvict/run_sinvict.py \
             $bam \
             $ref_file \
             ${params.sample_name}_sinvict.vcf \
