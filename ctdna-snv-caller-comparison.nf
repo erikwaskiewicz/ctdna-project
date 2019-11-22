@@ -38,6 +38,7 @@ if ( params.help ) { log.info help_message; exit 0 }
 // check for input files
 if ( !params.input_bam )    { log.error "ERROR\tinput bam is required"; exit 1 }
 if ( !params.genome_fasta ) { log.error "ERROR\tgenome fasta is required"; exit 1 }
+if ( !params.roi_bed )      { log.error "ERROR\tROI BED file is required"; exit 1 }
 
 // check if fasta indexes and dict exists
 if ( file(params.genome_fasta + ".fai").exists() ) {
@@ -51,6 +52,7 @@ if ( file(params.genome_fasta.replace(".fasta", ".dict")).exists() ) {
 // make file objects
 bam_file               = file("$params.input_bam", checkIfExists: true)
 genome_fasta_file      = file("$params.genome_fasta", checkIfExists: true)
+roi_bed_file           = file("$params.roi_bed", checkIfExists: true)
 params.sample_name     = bam_file.name.replace(".bam", "")
 
 // Create a summary for the logfile
@@ -61,6 +63,7 @@ summary["Command"]     = "$workflow.commandLine"
 summary["Start time"]  = "$workflow.start"
 summary["Sample"]      = "$params.sample_name"
 summary["Project"]     = "$workflow.projectDir"
+summary["ROI BED file"]= "$params.roi_bed"
 summary["BAM file"]    = "$params.input_bam"
 summary["fasta file"]  = "$params.genome_fasta"
 summary["fasta index"] = "$params.genome_fasta_index"
@@ -249,6 +252,7 @@ process var_call_sinvict {
     input:
         file(ref_file) from genome_fasta_file
         file(bam) from bam_rmdup
+        file(bed_file) from roi_bed_file
 
     output:
         file("${params.sample_name}_sinvict.vcf") into vcf_sinvict
@@ -258,7 +262,8 @@ process var_call_sinvict {
         python /var/app/run_sinvict.py \
             $bam \
             $ref_file \
-            ${params.sample_name}_sinvict.vcf
+            ${params.sample_name}_sinvict.vcf \
+            $bed_file
         """
 }
 
