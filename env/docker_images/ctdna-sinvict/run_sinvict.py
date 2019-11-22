@@ -82,6 +82,9 @@ for filepath, filter_tag in filter_list:
     # add to main dataframe
     all_calls = pd.concat([all_calls, df], ignore_index=True)
 
+# TODO - remove duplicate rows
+dup = all_calls[all_calls.duplicated(['chr', 'position', 'REF', 'alt'])]
+dup.to_csv('dups.tsv', index=False, sep='\t')
 
 # =====================================================================
 # convert output to VCF
