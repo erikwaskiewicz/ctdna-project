@@ -1,7 +1,16 @@
+'''
+run_sinvict.py
+
+Converts SiNVICT output into VCF
+To be run within ctdna-sinvict Docker container:
+https://cloud.docker.com/repository/docker/erikwaskiewicz/ctdna-sinvict
+'''
+
 import sys
 import subprocess
 import pandas as pd
 import csv
+
 
 # =====================================================================
 # load in variables and run command line tools
@@ -97,6 +106,7 @@ for filepath, filter_tag in filter_list:
                     'svt': svt,
                     'tag': filter_tag
                 }
+
 
 # =====================================================================
 # convert output to VCF

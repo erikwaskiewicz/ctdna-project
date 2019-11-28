@@ -262,7 +262,7 @@ process var_call_sinvict {
 
     script:
         """
-        python ${workflow.projectDir}/env/docker_images/ctdna-sinvict/run_sinvict.py \
+        python ${workflow.projectDir}/scripts/run_sinvict.py \
             $bam \
             $ref_file \
             ${params.sample_name}_sinvict.vcf \
