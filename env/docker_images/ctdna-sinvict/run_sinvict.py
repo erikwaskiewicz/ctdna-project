@@ -1,6 +1,7 @@
 import sys
 import subprocess
 import pandas as pd
+import csv
 
 # =====================================================================
 # load in variables and run command line tools
@@ -50,45 +51,76 @@ subprocess.call(
 
 # make list of sinvict output files and the filter that was applied to each
 filter_list = (
-    ('calls_level1.sinvict', '1-poisson_model'),
-    ('calls_level2.sinvict', '2-min_read_depth'),
-    ('calls_level3.sinvict', '3-strand_bias'),
-    ('calls_level4.sinvict', '4-average_pos'),
-    ('calls_level5.sinvict', '5-signal_to_noise'),
-    ('calls_level6.sinvict', '6-homopolymer_regions')
+    ('calls_level1.sinvict', '1'),
+    ('calls_level2.sinvict', '2'),
+    ('calls_level3.sinvict', '3'),
+    ('calls_level4.sinvict', '4'),
+    ('calls_level5.sinvict', '5'),
+    ('calls_level6.sinvict', '6')
 )
 
-# label columns of sinvict output, 
-# capitals are ready to go into final vcf, lower case need processing first
-sinvict_out_cols = [
-    'chr', 'position', 'sample', 'REF', 'DP', 'alt', 'SVR', 'percent', 
-    'mapped_plus', 'mapped_minus', 'ARP', 'SVT'
-]
-
 # make empty dataframe to store each iteration
-all_calls = pd.DataFrame(columns=sinvict_out_cols.append('SVF'))
+all_calls_dict = {}
 
 # loop through each output file and add a column for filter type
 for filepath, filter_tag in filter_list:
-    df = pd.read_csv(
-        filepath, 
-        header=None,
-        index_col=False,
-        sep='\t', 
-        names=sinvict_out_cols
-    )
-    df['SVF'] = filter_tag
+    with open(filepath, 'r') as f:
+        csvreader = csv.reader(f, delimiter='\t')
+        for line in csvreader:
+            chrom, position, sample, ref, dp, alt, svr, percent, mapped_plus, mapped_minus, arp, svt = line
+            unique_id = f'{chrom}_{position}_{ref}_{alt}'
+            if unique_id in all_calls_dict:
+                # add filter to filter column
+                all_calls_dict[unique_id]['tag'] += f',{filter_tag}'
+            else:
+                # reformat del/ins in alt field
+                if '-' in alt:
+                    ref = alt.strip('-')
+                    alt = '<DEL>'
+                elif '+' in alt:
+                    # TODO - this just strips the illegal characters - need to make sure genotypes are correct
+                    alt = alt.strip('+')
 
-    # add to main dataframe
-    all_calls = pd.concat([all_calls, df], ignore_index=True)
-
-# TODO - remove duplicate rows
-dup = all_calls[all_calls.duplicated(['chr', 'position', 'REF', 'alt'])]
-dup.to_csv('dups.tsv', index=False, sep='\t')
+                # make new object
+                all_calls_dict[unique_id] = {
+                    'chr': str(chrom),
+                    'position': str(position),
+                    'sample': sample,
+                    'ref': ref,
+                    'depth': dp,
+                    'alt': alt,
+                    'svr': svr,
+                    'percent': round(float(percent) / 100, 3),
+                    'mapped_plus': str(mapped_plus).strip('+:'),
+                    'mapped_minus': str(mapped_minus).strip('-:'),
+                    'arp': arp,
+                    'svt': svt,
+                    'tag': filter_tag
+                }
 
 # =====================================================================
 # convert output to VCF
 # =====================================================================
+
+# process sinvict data before importing into VCF
+all_calls = pd.DataFrame.from_dict(all_calls_dict, orient='index')
+all_calls = all_calls.sort_values(['chr', 'position'])
+
+formatted_calls = pd.DataFrame()
+formatted_calls['#CHROM'] = all_calls['chr']
+formatted_calls['POS'] = all_calls['position']
+formatted_calls['ID'] = '.'
+formatted_calls['REF'] = all_calls['ref']
+formatted_calls['ALT'] = all_calls['alt']
+formatted_calls['QUAL'] = '.'
+formatted_calls['FILTER'] = '.'
+formatted_calls['INFO'] = '.'
+
+# make format field
+formatted_calls['FORMAT'] = 'SVF:SVVAF:DP:SVT:SVR:MPS:MMS:ARP'
+formatted_calls[sample_name] = all_calls[
+    ['tag', 'percent', 'depth', 'svt', 'svr', 'mapped_plus', 'mapped_minus', 'arp']
+].apply(lambda x: ':'.join(x.map(str)), axis=1)
 
 # make VCF header
 vcf_header = [
@@ -96,7 +128,7 @@ vcf_header = [
     '##FILTER=<ID=PASS,Description="All filters passed">',
     f'##reference={ref_fasta}',
     '##ALT=<ID=*,Description="Represents allele(s) other than observed.">',
-    '##FORMAT=<ID=SVF,Number=.,Type=String,Description="sinvict filter">',
+    '##FORMAT=<ID=SVF,Number=.,Type=String,Description="sinvict filter - 1-poisson_model;2-min_read_depth;3-strand_bias;4-average_pos;5-signal_to_noise;6-homopolymer_regions">',
     '##FORMAT=<ID=SVVAF,Number=.,Type=String,Description="sinvict vaf">',
     '##FORMAT=<ID=DP,Number=.,Type=String,Description="depth">',
     '##FORMAT=<ID=SVT,Number=.,Type=String,Description="sinvict type (germline/somatic)">',
@@ -110,32 +142,5 @@ vcf_header = [
 with open(output_file, 'w') as f:
     f.writelines(line + '\n' for line in vcf_header)
 
-# process sinvict data before importing into VCF
-all_calls = all_calls.sort_values(['chr', 'position'])
-
-all_calls['#CHROM'] = all_calls['chr'].map(str)
-all_calls['POS'] = all_calls['position'].map(str)
-# TODO - this just scripts the illegal characters - need to make sure genotypes are correct
-all_calls['ALT'] = all_calls['alt'].str.strip('+-')
-
-all_calls['MPS'] = all_calls['mapped_plus'].str.strip('+:')
-all_calls['MMS'] = all_calls['mapped_minus'].str.strip('-:')
-all_calls['SVVAF'] = all_calls['percent'].div(100).round(3)
-
-all_calls['ID'] = '.'
-all_calls['QUAL'] = '.'
-all_calls['FILTER'] = '.'
-all_calls['INFO'] = '.'
-
-# make format field
-all_calls['FORMAT'] = 'SVF:SVVAF:DP:SVT:SVR:MPS:MMS:ARP'
-
-all_calls[sample_name] = all_calls[
-    ['SVF', 'SVVAF', 'DP', 'SVT', 'SVR', 'MPS', 'MMS', 'ARP']
-].apply(lambda x: ':'.join(x.map(str)), axis=1)
-
-# write VCF body
-all_calls = all_calls[
-    ['#CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT', sample_name]
-]
-all_calls.to_csv(output_file, index=False, sep='\t', mode='a')
+# write data to file
+formatted_calls.to_csv(output_file, index=False, sep='\t', mode='a')
