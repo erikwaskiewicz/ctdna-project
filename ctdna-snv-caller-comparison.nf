@@ -371,7 +371,6 @@ process combine_vcfs {
 
     input:
         file(mutect_variants) from processed_mutect
-        //file(sinvict_variants) from processed_sinvict
         file(varscan_variants) from processed_varscan
 
     output:
@@ -384,7 +383,6 @@ process combine_vcfs {
 
         # load all files into dataframes with variant ID as index
         df1 = pd.read_table("$mutect_variants", index_col=0)
-        #df2 = pd.read_table("$sinvict_variants", index_col=0)
         df2 = pd.read_table("$varscan_variants", index_col=0)
 
         # combine dataframes based on index
