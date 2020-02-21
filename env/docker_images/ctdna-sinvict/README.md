@@ -23,7 +23,7 @@ The following requirements are installed through apt-get:
 - gawk (Required for Nextflow reports)
 - procps (Required for Nextflow reports)
 
-SiNVICT is run within the Docker container using the custom script, `run_sinvict.py`:
+Requires the custom script, `run_sinvict.py`, to run SiNVICT:
 
 - Runs bam-readcount to generate a pileup file required by SiNVICT
 - Runs SiNVICT (uses FASTA reference otherwise SiNVICT will call loads of variants)
