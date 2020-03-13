@@ -184,6 +184,31 @@ process preprocess_bam_rmdup {
  *  Variant calling 
  *-------------------------------------------------------------------*/
 
+process var_call_freebayes {
+    /* 
+     * Call variants with freebayes
+     */
+    publishDir "${params.outdir}/vcfs", mode: "copy"
+
+    input:
+        file(ref_file) from genome_fasta_file
+        file(bam) from bam_rmdup
+        file(bed_file) from roi_bed_file
+
+    output:
+        file("${params.sample_name}_freebayes.vcf") into vcf_freebayes
+
+    script:
+        """
+        freebayes \
+            -f $ref_file \
+            -t $bed_file \
+            $bam \
+            > ${params.sample_name}_freebayes.vcf
+        """
+}
+
+
 process var_call_mutect {
     /* 
      * Call variants with GATK mutect2
