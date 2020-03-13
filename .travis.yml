@@ -37,7 +37,7 @@ script:
   # run the nextflow pipeline with the test data
   - nextflow run ctdna-snv-caller-comparison.nf \
       -profile test,singularity_conf \
-      --singularity_cache="/home/travis/build/erikwaskiewicz/ctdna-project"
+      --singularity_cache /home/travis/build/erikwaskiewicz/ctdna-project
 
   # run the pytest unit tests on the pipeline output
   - pytest --verbose
