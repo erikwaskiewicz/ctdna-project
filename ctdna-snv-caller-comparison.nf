@@ -192,7 +192,9 @@ process var_call_freebayes {
 
     input:
         file(ref_file) from genome_fasta_file
+        file(ref_index) from genome_fasta_index
         file(bam) from bam_rmdup
+        file(bam_index) from bam_rmdup_index
         file(bed_file) from roi_bed_file
 
     output:
