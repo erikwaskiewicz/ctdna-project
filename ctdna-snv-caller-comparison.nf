@@ -211,6 +211,33 @@ process var_call_freebayes {
 }
 
 
+process process_freebayes {
+    /* 
+     * Convert freebayes VCF into table
+     */
+    input:
+        file(vcf) from vcf_freebayes
+
+    output:
+        file("${params.sample_name}_freebayes.txt") into processed_freebayes
+
+    script:
+        """
+        # convert to table
+        gatk VariantsToTable \
+            -V $vcf \
+            -O variants.txt \
+            -F CHROM -F POS -F REF -F ALT -F FILTER -F AF \
+            -GF AD -GF DP
+        
+        # merge chr,pos,ref and alt, change headers and save to file
+        awk ' { print \$1":"\$2\$3">"\$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8 } ' variants.txt | \
+        sed "1 s/^.*\$/variant\tfreebayes_filter\tfreebayes_AF\tfreebayes_AD\tfreebayes_DP/" \
+            > ${params.sample_name}_freebayes.txt
+        """
+}
+
+
 process var_call_mutect {
     /* 
      * Call variants with GATK mutect2
