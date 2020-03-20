@@ -422,6 +422,7 @@ process combine_vcfs {
     publishDir "${params.outdir}/combined", mode: "copy"
 
     input:
+        file(freebayes_variants) from processed_freebayes
         file(mutect_variants) from processed_mutect
         file(varscan_variants) from processed_varscan
 
@@ -434,11 +435,12 @@ process combine_vcfs {
         import pandas as pd
 
         # load all files into dataframes with variant ID as index
-        df1 = pd.read_table("$mutect_variants", index_col=0)
-        df2 = pd.read_table("$varscan_variants", index_col=0)
+        df1 = pd.read_table("$freebayes_variants", index_col=0)
+        df2 = pd.read_table("$mutect_variants", index_col=0)
+        df3 = pd.read_table("$varscan_variants", index_col=0)
 
         # combine dataframes based on index
-        main = pd.concat([df1, df2], axis=1)
+        main = pd.concat([df1, df2, df3], axis=1)
 
         # write to file
         with open("${params.sample_name}_combined_results.txt", 'w') as f:
