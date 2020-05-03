@@ -184,6 +184,60 @@ process preprocess_bam_rmdup {
  *  Variant calling 
  *-------------------------------------------------------------------*/
 
+process var_call_freebayes {
+    /* 
+     * Call variants with freebayes
+     */
+    publishDir "${params.outdir}/vcfs", mode: "copy"
+
+    input:
+        file(ref_file) from genome_fasta_file
+        file(ref_index) from genome_fasta_index
+        file(bam) from bam_rmdup
+        file(bam_index) from bam_rmdup_index
+        file(bed_file) from roi_bed_file
+
+    output:
+        file("${params.sample_name}_freebayes.vcf") into vcf_freebayes
+
+    script:
+        """
+        freebayes \
+            -f $ref_file \
+            -t $bed_file \
+            $bam \
+            > ${params.sample_name}_freebayes.vcf
+        """
+}
+
+
+process process_freebayes {
+    /* 
+     * Convert freebayes VCF into table
+     */
+    input:
+        file(vcf) from vcf_freebayes
+
+    output:
+        file("${params.sample_name}_freebayes.txt") into processed_freebayes
+
+    script:
+        """
+        # convert to table
+        gatk VariantsToTable \
+            -V $vcf \
+            -O variants.txt \
+            -F CHROM -F POS -F REF -F ALT -F FILTER -F AF \
+            -GF AD -GF DP
+        
+        # merge chr,pos,ref and alt, change headers and save to file
+        awk ' { print \$1":"\$2\$3">"\$4"\t"\$5"\t"\$6"\t"\$7"\t"\$8 } ' variants.txt | \
+        sed "1 s/^.*\$/variant\tfreebayes_filter\tfreebayes_AF\tfreebayes_AD\tfreebayes_DP/" \
+            > ${params.sample_name}_freebayes.txt
+        """
+}
+
+
 process var_call_mutect {
     /* 
      * Call variants with GATK mutect2
@@ -248,7 +302,6 @@ process var_call_sinvict {
      *   - runs SiNVICT (outputs 6 text files, one for each filter)
      *   - converts output into VCF file
      *
-    container "${params.singularity_cache}/ctdna-sinvict-latest.simg"
     publishDir "${params.outdir}/vcfs", mode: "copy"
 
     input:
@@ -302,7 +355,6 @@ process var_call_varscan {
     /* 
      * Call variants with VarScan2
      */
-    container "${params.singularity_cache}/ctdna-varscan-latest.simg"
     publishDir "${params.outdir}/vcfs", mode: "copy"
 
     input:
@@ -370,6 +422,7 @@ process combine_vcfs {
     publishDir "${params.outdir}/combined", mode: "copy"
 
     input:
+        file(freebayes_variants) from processed_freebayes
         file(mutect_variants) from processed_mutect
         file(varscan_variants) from processed_varscan
 
@@ -382,11 +435,12 @@ process combine_vcfs {
         import pandas as pd
 
         # load all files into dataframes with variant ID as index
-        df1 = pd.read_table("$mutect_variants", index_col=0)
-        df2 = pd.read_table("$varscan_variants", index_col=0)
+        df1 = pd.read_table("$freebayes_variants", index_col=0)
+        df2 = pd.read_table("$mutect_variants", index_col=0)
+        df3 = pd.read_table("$varscan_variants", index_col=0)
 
         # combine dataframes based on index
-        main = pd.concat([df1, df2], axis=1)
+        main = pd.concat([df1, df2, df3], axis=1)
 
         # write to file
         with open("${params.sample_name}_combined_results.txt", 'w') as f:

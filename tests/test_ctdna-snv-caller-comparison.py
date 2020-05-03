@@ -46,6 +46,11 @@ class TestFilesExist:
         ) == True
 
     # VCFs from each variant caller
+    def test_vcf_freebayes(self):
+        assert os.path.exists(
+            f'{self.out_path}/vcfs/{self.sample_name}_freebayes.vcf'
+        ) == True
+
     def test_vcf_mutect(self):
         assert os.path.exists(
             f'{self.out_path}/vcfs/{self.sample_name}_mutect.vcf'

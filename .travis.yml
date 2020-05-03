@@ -31,11 +31,15 @@ script:
   # pull the Sigularity images
   - |
     singularity pull --name ctdna-base-latest.simg docker://erikwaskiewicz/ctdna-base:latest
+    singularity pull --name ctdna-freebayes-latest.simg docker://erikwaskiewicz/ctdna-freebayes:latest
     singularity pull --name ctdna-sinvict-latest.simg docker://erikwaskiewicz/ctdna-sinvict:latest
     singularity pull --name ctdna-varscan-latest.simg docker://erikwaskiewicz/ctdna-varscan:latest
     
   # run the nextflow pipeline with the test data
-  - nextflow run ctdna-snv-caller-comparison.nf -profile test,travis
+  - |
+    nextflow run ctdna-snv-caller-comparison.nf \
+        -profile test,singularity_conf \
+        --singularity_cache /home/travis/build/erikwaskiewicz/ctdna-project
 
   # run the pytest unit tests on the pipeline output
   - pytest --verbose
